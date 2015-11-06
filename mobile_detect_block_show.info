@@ -1,4 +1,4 @@
 name = Mobile detect block show
-description = Control block visibility in mobile devices using Browscap.
+description = Control block visibility in mobile devices using Mobile detect module.
 core = 7.x
 dependencies[] = mobile_detect

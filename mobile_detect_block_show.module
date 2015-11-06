@@ -1,0 +1,137 @@
+<?php
+
+/**
+ * @file Browscap Block.
+ * Block visibility options for mobile devices using Browscap detection.
+ */
+
+/**
+ * Implements hook_form_FORMID_alter().
+ * @see block_add_block_form()
+ */
+function mobile_detect_block_show_form_block_add_block_form_alter(&$form, &$form_state) {
+  mobile_detect_block_show_form_block_admin_configure_alter($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORMID_alter().
+ * Adds mobile specific visibility options to block configuration form.
+ * @see block_admin_configure()
+ */
+function mobile_detect_block_show_form_block_admin_configure_alter(&$form, &$form_state) {
+  $result = db_query("SELECT ismobile FROM {mobile_detect_block_show} WHERE module = :module AND delta = :delta", array(
+      ':module' => $form['module']['#value'],
+      ':delta' => $form['delta']['#value'],
+          ))->fetchCol();
+
+  $default_value = 0;
+  if (!empty($result)) {
+    $default_value = $result[0];
+  }
+
+  $form['visibility']['mobile_detect_block_show'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Is Mobile'),
+      '#group' => 'visibility',
+      '#weight' => 6,
+      '#tree' => true,
+      '#attached' => array(
+          'js' => array(drupal_get_path('module', 'mobile_detect_block_show') . '/mobile_detect_block_show.js'),
+      ),
+  );
+  $form['visibility']['mobile_detect_block_show']['ismobile'] = array(
+      '#type' => 'radios',
+      '#title' => t('Hide or show this block in mobile devices'),
+      '#default_value' => $default_value,
+      '#options' => array(
+          0 => t('Show in all device'),
+          1 => t('Hide in mobile and tablet'),
+          2 => t('Hide in mobile only'),
+          3 => t('Hide in tablet only'),
+          4 => t('Show in mobile and tablet device'),
+          5 => t('Show in Mobile device only'),
+          6 => t('Show in Tablet device only'),
+      ),
+  );
+
+  $form['#submit'][] = 'mobile_detect_block_show_form_block_admin_configure_submit';
+}
+
+/**
+ * Form submit handler for block configuration form.
+ * @see mobile_detect_block_show_form_block_admin_configure_alter()
+ */
+function mobile_detect_block_show_form_block_admin_configure_submit($form, &$form_state) {
+  db_delete('mobile_detect_block_show')
+          ->condition('module', $form_state['values']['module'])
+          ->condition('delta', $form_state['values']['delta'])
+          ->execute();
+  $query = db_insert('mobile_detect_block_show')
+          ->fields(array('ismobile', 'module', 'delta'));
+  $query->values(array(
+      'ismobile' => $form_state['values']['mobile_detect_block_show']['ismobile'],
+      'module' => $form_state['values']['module'],
+      'delta' => $form_state['values']['delta'],
+  ));
+  $query->execute();
+}
+
+/**
+ * Implements hook_block_list_alter().
+ * Check the mobile device specific visibilty settings.
+ * Remove the block if the visibility conditions are not met.
+ */
+function mobile_detect_block_show_block_list_alter(&$blocks) {
+  $detect = mobile_detect_get_object();
+  $is_mobile = $detect->isMobile();
+  $is_tablet = $detect->isTablet();
+
+  global $theme_key;
+  
+  $mobile_detect_block_show = array();
+  $result = db_query('SELECT module, delta, ismobile FROM {mobile_detect_block_show}');
+  foreach ($result as $record) {
+    $mobile_detect_block_show[$record->module][$record->delta] = (int) $record->ismobile;
+  }
+
+  foreach ($blocks as $key => $block) {
+    if (!isset($block->theme) || !isset($block->status) || $block->theme != $theme_key || $block->status != 1) {
+      // This block was added by a contrib module, leave it in the list.
+      continue;
+    }
+
+    foreach ($mobile_detect_block_show as $module => $delta) {
+      if ($module == $block->module) {
+        foreach ($delta as $delta_key => $delta_value) {
+          if ($delta_key == $block->delta) {
+            if ($delta_value == 6) {
+              if (($is_mobile == TRUE && $is_tablet == FALSE) || ($is_mobile == FALSE)) {
+                unset($blocks[$key]);
+              }
+            } elseif ($delta_value == 5) {
+              if (($is_mobile == FALSE && $is_tablet == TRUE) || ($is_mobile == FALSE)) {
+                unset($blocks[$key]);
+              }
+            } elseif ($delta_value == 4) {
+              if ($is_mobile == FALSE || $is_tablet == FALSE) {
+                unset($blocks[$key]);
+              }
+            } elseif ($delta_value == 3) {
+              if ($is_tablet == TRUE) {
+                unset($blocks[$key]);
+              }
+            } elseif ($delta_value == 2) {
+              if ($is_mobile == TRUE && $is_tablet == FALSE) {
+                unset($blocks[$key]);
+              }
+            } elseif ($delta_value == 1) {
+              if ($is_mobile == TRUE || $is_tablet == TRUE) {
+                unset($blocks[$key]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

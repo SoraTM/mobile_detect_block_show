@@ -30,7 +30,7 @@ function mobile_detect_block_show_schema() {
         'not null' => TRUE,
         'default' => 0,
         'size' => 'tiny',
-        'description' => 'Hide or show blocks in mobile devices. (1 = hide, 0 = show)',
+        'description' => 'Hide or show blocks in mobile and tablet devices.',
       ),
     ),
     'primary key' => array('module', 'delta', 'ismobile'),

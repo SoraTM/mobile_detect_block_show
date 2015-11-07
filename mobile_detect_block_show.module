@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @file Browscap Block.
- * Block visibility options for mobile devices using Browscap detection.
+ * @file Mobile Detect Block Show.
+ * Block visibility options for mobile devices using Mobile Detect.
  */
 
 /**

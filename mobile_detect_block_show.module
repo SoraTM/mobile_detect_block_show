@@ -45,9 +45,9 @@ function mobile_detect_block_show_form_block_admin_configure_alter(&$form, &$for
       '#default_value' => $default_value,
       '#options' => array(
           0 => t('Show in all device'),
-          1 => t('Hide in mobile and tablet'),
-          2 => t('Hide in mobile only'),
-          3 => t('Hide in tablet only'),
+          1 => t('Hide in mobile and tablet devices'),
+          2 => t('Hide in mobile device only'),
+          3 => t('Hide in tablet device only'),
           4 => t('Show in mobile and tablet device'),
           5 => t('Show in Mobile device only'),
           6 => t('Show in Tablet device only'),

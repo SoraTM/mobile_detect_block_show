@@ -105,11 +105,11 @@ function mobile_detect_block_show_block_list_alter(&$blocks) {
         foreach ($delta as $delta_key => $delta_value) {
           if ($delta_key == $block->delta) {
             if ($delta_value == 6) {
-              if (($is_mobile == TRUE && $is_tablet == FALSE) || ($is_mobile == FALSE)) {
+              if (($is_mobile == TRUE && $is_tablet == FALSE) || ($is_tablet == FALSE)) {
                 unset($blocks[$key]);
               }
             } elseif ($delta_value == 5) {
-              if (($is_mobile == FALSE && $is_tablet == TRUE) || ($is_mobile == FALSE)) {
+              if (($is_tablet == TRUE) || ($is_mobile == FALSE)) {
                 unset($blocks[$key]);
               }
             } elseif ($delta_value == 4) {
